@@ -3,6 +3,7 @@ import browserSync from "browser-sync";
 import fs from "fs";
 import gulp from "gulp";
 import gulpLoadPlugins from "gulp-load-plugins";
+import history from "connect-history-api-fallback";
 import mkdirp from "mkdirp";
 import proGulp from "pro-gulp";
 import webpack from "webpack";
@@ -151,7 +152,8 @@ gulp.task("test", proGulp.task("test"));
 proGulp.task("setupDevServer", function () {
     browserSync({
         server: {
-            baseDir: buildDir
+            baseDir: buildDir,
+            middleware: [history()]
         },
         files: `${buildDir}/**/*`,
         port: 8080,
