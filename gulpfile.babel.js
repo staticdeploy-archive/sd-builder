@@ -15,12 +15,11 @@ const gp = gulpLoadPlugins();
 *   Constants
 */
 
-const deps = JSON.parse(
-    fs.readFileSync(`${process.cwd()}/deps.json`)
-);
 const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
+const depsPath = `${process.cwd()}/deps.json`;
+
 
 
 /*
@@ -34,6 +33,7 @@ proGulp.task("buildMainHtml", function () {
 });
 
 proGulp.task("buildAllScripts", (function () {
+    const deps = JSON.parse(fs.readFileSync(depsPath));
     mkdirp.sync(`${buildDir}/_assets/js`);
     var compiler = webpack({
         entry: {
@@ -78,12 +78,14 @@ proGulp.task("buildAppAssets", function () {
 });
 
 proGulp.task("buildVendorStyles", function () {
+    const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.css)
         .pipe(gp.concat("vendor.css"))
         .pipe(gulp.dest(`${buildDir}/_assets/css/`));
 });
 
 proGulp.task("buildVendorFonts", function () {
+    const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.fonts)
         .pipe(gulp.dest(`${buildDir}/_assets/fonts/`));
 });
@@ -168,7 +170,7 @@ proGulp.task("setupWatchers", function () {
     );
     gulp.watch(
         [`${appDir}/**/*.jsx`, `${appDir}/**/*.js`],
-        proGulp.parallel(["buildAppScripts", "test"])
+        proGulp.parallel(["buildAllScripts", "test"])
     );
     gulp.watch(
         `${appDir}/assets/**/*`,
@@ -177,6 +179,10 @@ proGulp.task("setupWatchers", function () {
     gulp.watch(
         [`${testDir}/**/*.jsx`, `${testDir}/**/*.js`],
         proGulp.task("test")
+    );
+    gulp.watch(
+        depsPath,
+        proGulp.parallel(["buildAllScripts", "buildVendorFonts", "buildVendorStyles", "test"])
     );
 });
 
