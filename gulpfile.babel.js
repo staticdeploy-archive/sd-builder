@@ -15,7 +15,9 @@ const gp = gulpLoadPlugins();
 *   Constants
 */
 
-const deps = JSON.parse(fs.readFileSync("deps.json", "utf8"));
+const deps = JSON.parse(
+    fs.readFileSync(`${process.cwd()}/deps.json`)
+);
 const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
