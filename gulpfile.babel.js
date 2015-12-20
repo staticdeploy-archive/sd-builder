@@ -35,7 +35,7 @@ proGulp.task("buildMainHtml", function () {
 proGulp.task("buildAllScripts", (function () {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     mkdirp.sync(`${buildDir}/_assets/js`);
-    var compiler = webpack({
+    const compiler = webpack({
         entry: {
             app: `${appDir}/main.jsx`,
             vendor: deps.js
@@ -59,7 +59,7 @@ proGulp.task("buildAllScripts", (function () {
         },
         resolve: {
             root: appDir,
-            extensions: [".js", ".json", ".jsx"]
+            extensions: ["", ".js", ".json", ".jsx"]
         },
         plugins: [
             new webpack.optimize.DedupePlugin(),
