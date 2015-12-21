@@ -1,5 +1,6 @@
 import {promisify} from "bluebird";
 import browserSync from "browser-sync";
+import dotenv from "dotenv";
 import fs from "fs";
 import gulp from "gulp";
 import gulpLoadPlugins from "gulp-load-plugins";
@@ -16,6 +17,7 @@ const gp = gulpLoadPlugins();
 *   Constants
 */
 
+const {NODE_ENV = "development"} = process.env;
 const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
@@ -78,6 +80,22 @@ proGulp.task("buildAppAssets", function () {
         .pipe(gulp.dest(`${buildDir}/_assets/`));
 });
 
+proGulp.task("buildDevAppConfig", function () {
+    if (NODE_ENV !== "development") {
+        // Only build in development
+        return;
+    }
+    try {
+        const env = fs.readFileSync(`${process.cwd()}/.env`);
+        const config = dotenv.parse(env);
+        const code = `window.APP_CONFIG = ${JSON.stringify(config, null, 4)};`;
+        fs.writeFileSync(`${buildDir}/app-config.js`, code);
+    } catch (error) {
+        console.log("Error building app config");
+        console.log(error.message);
+    }
+});
+
 proGulp.task("buildVendorStyles", function () {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.css)
@@ -95,6 +113,7 @@ proGulp.task("build", proGulp.parallel([
     "buildMainHtml",
     "buildAllScripts",
     "buildAppAssets",
+    "buildDevAppConfig",
     "buildVendorStyles",
     "buildVendorFonts"
 ]));
@@ -169,6 +188,10 @@ proGulp.task("setupWatchers", function () {
     gulp.watch(
         `${appDir}/main.html`,
         proGulp.task("buildMainHtml")
+    );
+    gulp.watch(
+        `${appDir}/.env`,
+        proGulp.task("buildDevAppConfig")
     );
     gulp.watch(
         [`${appDir}/**/*.jsx`, `${appDir}/**/*.js`],
