@@ -151,6 +151,7 @@ proGulp.task("test", function () {
         .pipe(gp.spawnMocha({
             compilers: "jsx:babel-register",
             env: {
+                NODE_ENV: "test",
                 NODE_PATH: `${appDir}:${testDir}`
             }
         }))
