@@ -1,5 +1,6 @@
 import {promisify} from "bluebird";
 import browserSync from "browser-sync";
+import {execSync} from "child_process";
 import dotenv from "dotenv";
 import fs from "fs";
 import gulp from "gulp";
@@ -22,6 +23,7 @@ const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
 const depsPath = `${process.cwd()}/deps.json`;
+const npmDir = `${process.cwd()}/node_modules/.bin`;
 
 
 
@@ -29,13 +31,13 @@ const depsPath = `${process.cwd()}/deps.json`;
 *   Builders
 */
 
-proGulp.task("buildMainHtml", function () {
+proGulp.task("buildMainHtml", () => {
     return gulp.src(`${appDir}/main.html`)
         .pipe(gp.rename("index.html"))
         .pipe(gulp.dest(`${buildDir}/`));
 });
 
-proGulp.task("buildAllScripts", (function () {
+proGulp.task("buildAllScripts", (() => {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     mkdirp.sync(`${buildDir}/_assets/js`);
     const compiler = webpack({
@@ -75,12 +77,12 @@ proGulp.task("buildAllScripts", (function () {
     return promisify(::compiler.run);
 })());
 
-proGulp.task("buildAppAssets", function () {
+proGulp.task("buildAppAssets", () => {
     return gulp.src(`${appDir}/assets/**/*`)
         .pipe(gulp.dest(`${buildDir}/_assets/`));
 });
 
-proGulp.task("buildDevAppConfig", function () {
+proGulp.task("buildDevAppConfig", () => {
     if (NODE_ENV !== "development") {
         // Only build in development
         return;
@@ -96,14 +98,14 @@ proGulp.task("buildDevAppConfig", function () {
     }
 });
 
-proGulp.task("buildVendorStyles", function () {
+proGulp.task("buildVendorStyles", () => {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.css)
         .pipe(gp.concat("vendor.css"))
         .pipe(gulp.dest(`${buildDir}/_assets/css/`));
 });
 
-proGulp.task("buildVendorFonts", function () {
+proGulp.task("buildVendorFonts", () => {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.fonts)
         .pipe(gulp.dest(`${buildDir}/_assets/fonts/`));
@@ -126,7 +128,7 @@ gulp.task("build", proGulp.task("build"));
 *   Linter
 */
 
-gulp.task("lint", function () {
+gulp.task("lint", () => {
     const srcs = [
         `${appDir}/**/*.js`,
         `${appDir}/**/*.jsx`,
@@ -146,13 +148,13 @@ gulp.task("lint", function () {
 *   Testers
 */
 
-proGulp.task("test", function () {
+proGulp.task("test", () => {
     return gulp.src([`${testDir}/**/*.js`, `${testDir}/**/*.jsx`])
         .pipe(gp.spawnMocha({
             compilers: "jsx:babel-register",
             env: {
                 NODE_ENV: "test",
-                NODE_PATH: `${appDir}:${testDir}`
+                NODE_PATH: `${appDir}`
             }
         }))
         .on("error", function () {
@@ -163,13 +165,29 @@ proGulp.task("test", function () {
 
 gulp.task("test", proGulp.task("test"));
 
+proGulp.task("coverage", () => {
+    const command = [
+        `${npmDir}/babel-node`,
+        `${npmDir}/isparta cover`,
+        `${npmDir}/_mocha -- test/*.js test/*.jsx test/**/*.js test/**/*.jsx`
+    ].join(" ");
+    execSync(command, {
+        env: {
+            NODE_ENV: "test",
+            NODE_PATH: `${appDir}`
+        }
+    });
+});
+
+gulp.task("coverage", proGulp.task("coverage"));
+
 
 
 /*
 *   Tasks to setup the development environment
 */
 
-proGulp.task("setupDevServer", function () {
+proGulp.task("setupDevServer", () => {
     browserSync({
         server: {
             baseDir: buildDir,
@@ -185,7 +203,7 @@ proGulp.task("setupDevServer", function () {
     });
 });
 
-proGulp.task("setupWatchers", function () {
+proGulp.task("setupWatchers", () => {
     gulp.watch(
         `${appDir}/main.html`,
         proGulp.task("buildMainHtml")
@@ -225,14 +243,15 @@ gulp.task("dev", proGulp.sequence([
 *   Default task
 */
 
-gulp.task("default", function () {
+gulp.task("default", () => {
     gp.util.log("");
     gp.util.log("Usage: " + gp.util.colors.blue("sd-builder [TASK]"));
     gp.util.log("");
     gp.util.log("Available tasks:");
     gp.util.log("  " + gp.util.colors.green("build") + "    build the project");
     gp.util.log("  " + gp.util.colors.green("dev") + "      set up dev environment with auto-recompiling");
-    gp.util.log("  " + gp.util.colors.green("lint") + "     lints application source code");
-    gp.util.log("  " + gp.util.colors.green("test") + "     runs tests");
+    gp.util.log("  " + gp.util.colors.green("lint") + "     lint application source code");
+    gp.util.log("  " + gp.util.colors.green("test") + "     run tests");
+    gp.util.log("  " + gp.util.colors.green("coverage") + " run tests and calculate coverage");
     gp.util.log("");
 });
