@@ -167,16 +167,15 @@ gulp.task("test", proGulp.task("test"));
 
 proGulp.task("coverage", () => {
     const command = [
+        `env NODE_ENV="test"`,
+        `env NODE_PATH="${appDir}"`,
         `${npmDir}/babel-node`,
         `${npmDir}/isparta cover`,
         `${npmDir}/_mocha -- test/*.js test/*.jsx test/**/*.js test/**/*.jsx`
     ].join(" ");
     execSync(command, {
-        env: {
-            ...process.env,
-            NODE_ENV: "test",
-            NODE_PATH: `${appDir}`
-        }
+        env: process.env,
+        stdio: "inherit"
     });
 });
 
