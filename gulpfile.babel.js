@@ -147,7 +147,7 @@ gulp.task("lint", function () {
 */
 
 proGulp.task("test", function () {
-    return gulp.src(`${testDir}/**/*.js`)
+    return gulp.src([`${testDir}/**/*.js`, `${testDir}/**/*.jsx`])
         .pipe(gp.spawnMocha({
             compilers: "jsx:babel-register",
             env: {
