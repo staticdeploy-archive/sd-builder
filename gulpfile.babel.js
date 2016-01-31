@@ -173,6 +173,7 @@ proGulp.task("coverage", () => {
     ].join(" ");
     execSync(command, {
         env: {
+            ...process.env,
             NODE_ENV: "test",
             NODE_PATH: `${appDir}`
         }
