@@ -9,6 +9,7 @@ const command = [
 ].join(" ");
 
 const options = {
+    env: process.env,
     stdio: "inherit"
 };
 
