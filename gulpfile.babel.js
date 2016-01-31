@@ -170,7 +170,7 @@ proGulp.task("coverage", () => {
         `env NODE_ENV="test"`,
         `env NODE_PATH="${appDir}"`,
         `${npmDir}/babel-node`,
-        `${npmDir}/isparta cover`,
+        `${npmDir}/isparta cover --include "**/*.js" --include "**/*.jsx"`,
         `${npmDir}/_mocha -- test/*.js* test/**/*.js*`
     ].join(" ");
     execSync(command, {
