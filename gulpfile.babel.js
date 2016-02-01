@@ -68,6 +68,9 @@ proGulp.task("buildAllScripts", (() => {
             extensions: ["", ".js", ".json", ".jsx"]
         },
         plugins: [
+            new webpack.DefinePlugin({
+                "process.env.NODE_ENV": JSON.stringify(NODE_ENV)
+            }),
             new webpack.optimize.DedupePlugin(),
             new webpack.optimize.CommonsChunkPlugin(
                 "vendor",
