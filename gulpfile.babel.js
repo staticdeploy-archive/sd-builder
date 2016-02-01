@@ -19,6 +19,7 @@ const gp = gulpLoadPlugins();
 */
 
 const {NODE_ENV = "development"} = process.env;
+const MINIFY_FILES = (NODE_ENV === "production");
 const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
@@ -71,8 +72,9 @@ proGulp.task("buildAllScripts", (() => {
             new webpack.optimize.CommonsChunkPlugin(
                 "vendor",
                 `${buildDir}/_assets/js/vendor.js`
-            )
-        ]
+            ),
+            (MINIFY_FILES ? new webpack.optimize.UglifyJsPlugin() : null)
+        ].filter(i => i)
     });
     return promisify(::compiler.run);
 })());
@@ -102,6 +104,7 @@ proGulp.task("buildVendorStyles", () => {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.css)
         .pipe(gp.concat("vendor.css"))
+        .pipe(gp.if(MINIFY_FILES, gp.minifyCss()))
         .pipe(gulp.dest(`${buildDir}/_assets/css/`));
 });
 

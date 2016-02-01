@@ -13,7 +13,6 @@
         "babel/new-cap": [2],
         "babel/object-curly-spacing": [2],
         "babel/object-shorthand": [2],
-        "babel/arrow-parens": [2],
         "babel/no-await-in-loop": [2],
         "brace-style": [2, "1tbs"],
         "comma-spacing": [2, {"before": false, "after": true}],
