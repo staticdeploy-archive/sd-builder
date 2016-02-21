@@ -173,7 +173,7 @@ gulp.task("test", proGulp.task("test"));
 
 proGulp.task("coverage", () => {
     const command = [
-        `env NODE_ENV="test"`,
+        "env NODE_ENV=\"test\"",
         `env NODE_PATH="${appDir}"`,
         `${npmDir}/babel-node`,
         `${npmDir}/isparta cover --include "**/*.js" --include "**/*.jsx"`,
