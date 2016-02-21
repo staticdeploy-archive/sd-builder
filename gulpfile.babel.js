@@ -107,7 +107,7 @@ proGulp.task("buildVendorStyles", () => {
     const deps = JSON.parse(fs.readFileSync(depsPath));
     return gulp.src(deps.css)
         .pipe(gp.concat("vendor.css"))
-        .pipe(gp.if(MINIFY_FILES, gp.minifyCss()))
+        .pipe(gp.if(MINIFY_FILES, gp.cssnano()))
         .pipe(gulp.dest(`${buildDir}/_assets/css/`));
 });
 
