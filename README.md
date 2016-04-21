@@ -31,8 +31,8 @@ Opinionated builder for react web projects.
 * Files are compiled by babel. It's up to the user to specify which plugins to
   use by installing and listing them in a `.babelrc` config file.
 
-* Dependencies listed in `deps.json`'s `js` array are written in the separate
-  bundle `build/_assets/js/vendor.js`.
+* npm modules listed in `deps.json`'s `js` array are separated from the main
+  bundle and compiled into `build/_assets/js/vendor.js`.
 
 * During `webpack`'s compilation `NODE_PATH` includes the `app` directory.
 
