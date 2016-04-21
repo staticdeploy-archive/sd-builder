@@ -1,11 +1,12 @@
 import {promisify} from "bluebird";
 import browserSync from "browser-sync";
 import {execSync} from "child_process";
+import history from "connect-history-api-fallback";
 import dotenv from "dotenv";
 import fs from "fs";
 import gulp from "gulp";
 import gulpLoadPlugins from "gulp-load-plugins";
-import history from "connect-history-api-fallback";
+import _ from "lodash";
 import mkdirp from "mkdirp";
 import proGulp from "pro-gulp";
 import webpack from "webpack";
@@ -25,6 +26,26 @@ const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
 const depsPath = `${process.cwd()}/deps.json`;
 const npmDir = `${process.cwd()}/node_modules/.bin`;
+
+
+
+/*
+*   Utils
+*/
+
+function getCommitSha () {
+    try {
+        return execSync("git rev-parse HEAD").toString();
+    } catch (ignore) {
+        console.warn("Failed to get commit sha via git command");
+    }
+    try {
+        return execSync("cat .git/ORIG_HEAD").toString();
+    } catch (ignore) {
+        console.warn("Failed to get commit sha by reading from ORIG_HEAD");
+    }
+    return null;
+}
 
 
 
@@ -87,20 +108,12 @@ proGulp.task("buildAppAssets", () => {
         .pipe(gulp.dest(`${buildDir}/_assets/`));
 });
 
-proGulp.task("buildDevAppConfig", () => {
-    if (NODE_ENV !== "development") {
-        // Only build in development
-        return;
-    }
-    try {
-        const env = fs.readFileSync(`${process.cwd()}/.env`);
-        const config = dotenv.parse(env);
-        const code = `window.APP_CONFIG = ${JSON.stringify(config, null, 4)};`;
-        fs.writeFileSync(`${buildDir}/app-config.js`, code);
-    } catch (error) {
-        console.log("Error building app config");
-        console.log(error.message);
-    }
+proGulp.task("buildAppVersion", () => {
+    const pkg = fs.readFileSync(`${process.cwd()}/package.json`);
+    const commitSha = getCommitSha();
+    const commitShaString = commitSha ? ` - ${commitSha}` : "";
+    const version = `${pkg.version}${commitShaString}`;
+    fs.writeFileSync(`${buildDir}/VERSION`, version);
 });
 
 proGulp.task("buildVendorStyles", () => {
@@ -121,12 +134,43 @@ proGulp.task("build", proGulp.parallel([
     "buildMainHtml",
     "buildAllScripts",
     "buildAppAssets",
-    "buildDevAppConfig",
+    "buildAppVersion",
     "buildVendorStyles",
     "buildVendorFonts"
 ]));
 
 gulp.task("build", proGulp.task("build"));
+
+
+
+/*
+*   Config generator
+*/
+
+proGulp.task("config", () => {
+    var config = {};
+    if (NODE_ENV === "development") {
+        // In development, read from the `.env` file
+        try {
+            const env = fs.readFileSync(`${process.cwd()}/.env`);
+            config = dotenv.parse(env);
+        } catch (ignore) {
+            console.log("Failed to read configuration from file `.env`");
+        }
+    }
+    if (NODE_ENV === "production") {
+        // In production, read from the `process.env` but only those variables
+        // having a key that starts with __APP_CONFIG__
+        const prefixRegexp = /^__APP_CONFIG__/;
+        config = _(process.env)
+            .pickBy((value, key) => prefixRegexp.test(key))
+            .mapKeys((value, key) => key.replace(prefixRegexp, ""));
+    }
+    const code = `window.APP_CONFIG = ${JSON.stringify(config, null, 4)};`;
+    fs.writeFileSync(`${buildDir}/app-config.js`, code);
+});
+
+gulp.task("config", proGulp.task("config"));
 
 
 
@@ -216,7 +260,7 @@ proGulp.task("setupWatchers", () => {
     );
     gulp.watch(
         `${appDir}/.env`,
-        proGulp.task("buildDevAppConfig")
+        proGulp.task("config")
     );
     gulp.watch(
         [`${appDir}/**/*.jsx`, `${appDir}/**/*.js`],
@@ -238,6 +282,7 @@ proGulp.task("setupWatchers", () => {
 
 gulp.task("dev", proGulp.sequence([
     "build",
+    "config",
     "test",
     "setupDevServer",
     "setupWatchers"
@@ -255,6 +300,7 @@ gulp.task("default", () => {
     gp.util.log("");
     gp.util.log("Available tasks:");
     gp.util.log("  " + gp.util.colors.green("build") + "    build the project");
+    gp.util.log("  " + gp.util.colors.green("config") + "   write the configuration to app-config.js");
     gp.util.log("  " + gp.util.colors.green("dev") + "      set up dev environment with auto-recompiling");
     gp.util.log("  " + gp.util.colors.green("lint") + "     lint application source code");
     gp.util.log("  " + gp.util.colors.green("test") + "     run tests");

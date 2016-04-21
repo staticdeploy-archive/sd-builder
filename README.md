@@ -10,6 +10,7 @@ Opinionated builder for react web projects.
 
 * `sd-builder dev` sets up dev environment with auto-recompiling
 * `sd-builder build` builds the project
+* `sd-builder config` writes the app configuration to `app-config.js`
 * `sd-builder lint` lints files with eslint
 * `sd-builder test` runs tests
 * `sd-builder coverage` runs tests and calculates coverage
@@ -60,12 +61,24 @@ Opinionated builder for react web projects.
 * Test files go into the `test` directory. They can either have a `.js` or a
   `.jsx ` extension.
 
+### Version
+
+* the build generates a `VERSION` file with the following format:
+  * if building in a git repository, `[package.json version] - [git commit sha]`
+  * otherwise, `[package.json version]`
+
 ### General
 
 * When `NODE_ENV=production` JS and CSS files are minified.
 
-* When `NODE_ENV=development`, a `build/app-config.js` is generated, containing
-  one global variable, `APP_CONFIG` which is a map of all variables specified in
-  `.env`.
-
 * Linting can be configured with a `.eslintrc` file.
+
+## Configuration
+
+Running `sd-builder config` a `build/app-config.js` file is generated, exporting
+one global variable, `window.APP_CONFIG`, which is a map of key-value pairs
+gathered from:
+
+* the `.env` file when `NODE_ENV=development`
+* environment variables prefixed by `__APP_CONFIG__` file when
+  `NODE_ENV=production`
