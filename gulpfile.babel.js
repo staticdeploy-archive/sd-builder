@@ -18,8 +18,7 @@ const gp = gulpLoadPlugins();
 /*
 *   Constants
 */
-
-const {NODE_ENV = "development"} = process.env;
+const {NODE_ENV = "development", ENVIRONMENT = NODE_ENV} = process.env;
 const MINIFY_FILES = (NODE_ENV === "production");
 const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
@@ -55,6 +54,7 @@ function getCommitSha () {
 
 proGulp.task("buildMainHtml", () => {
     return gulp.src(`${appDir}/main.html`)
+        .pipe(gp.preprocess({context: {ENVIRONMENT}}))
         .pipe(gp.rename("index.html"))
         .pipe(gulp.dest(`${buildDir}/`));
 });
@@ -90,7 +90,10 @@ proGulp.task("buildAllScripts", (() => {
         },
         plugins: [
             new webpack.DefinePlugin({
-                "process.env.NODE_ENV": JSON.stringify(NODE_ENV)
+                "process.env": {
+                    NODE_ENV: JSON.stringify(NODE_ENV),
+                    ENVIRONMENT: JSON.stringify(ENVIRONMENT)
+                }
             }),
             new webpack.optimize.DedupePlugin(),
             new webpack.optimize.CommonsChunkPlugin(
@@ -109,7 +112,8 @@ proGulp.task("buildAppAssets", () => {
 });
 
 proGulp.task("buildAppVersion", () => {
-    const pkg = fs.readFileSync(`${process.cwd()}/package.json`);
+    const pkg = JSON.parse(fs.readFileSync(`${process.cwd()}/package.json`, "utf8"));
+    console.log(pkg);
     const commitSha = getCommitSha();
     const commitShaString = commitSha ? ` - ${commitSha}` : "";
     const version = `${pkg.version}${commitShaString}`;
