@@ -113,7 +113,6 @@ proGulp.task("buildAppAssets", () => {
 
 proGulp.task("buildAppVersion", () => {
     const pkg = JSON.parse(fs.readFileSync(`${process.cwd()}/package.json`, "utf8"));
-    console.log(pkg);
     const commitSha = getCommitSha();
     const commitShaString = commitSha ? ` - ${commitSha}` : "";
     const version = `${pkg.version}${commitShaString}`;
