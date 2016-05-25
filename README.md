@@ -89,7 +89,8 @@ You should add `app-config.js` script in your `main.html` file.
 <script src="app-config.js"></script>
 ```
 
-It's possible to distinguish between two different execution environments in preprocess by setting the `EXEC_ENV` variable. The default value is `browser`:
+At build time, it's possible to distinguish between different execution environments by setting the EXEC_ENV build environment variable. EXEC_ENV defaults to browser.
+
 ```html
 <!-- @if EXEC_ENV=='cordova' -->
 <script src="/app-config.js"></script>

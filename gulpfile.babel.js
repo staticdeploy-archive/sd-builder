@@ -54,7 +54,7 @@ function getCommitSha () {
 
 proGulp.task("buildMainHtml", () => {
     return gulp.src(`${appDir}/main.html`)
-        .pipe(gp.preprocess({context: {EXEC_ENV}}))
+        .pipe(gp.preprocess({context: {EXEC_ENV, NODE_ENV}}))
         .pipe(gp.rename("index.html"))
         .pipe(gulp.dest(`${buildDir}/`));
 });
@@ -90,10 +90,8 @@ proGulp.task("buildAllScripts", (() => {
         },
         plugins: [
             new webpack.DefinePlugin({
-                "process.env": {
-                    NODE_ENV: JSON.stringify(NODE_ENV),
-                    EXEC_ENV: JSON.stringify(EXEC_ENV)
-                }
+                "process.env.NODE_ENV": JSON.stringify(NODE_ENV),
+                "process.env.EXEC_ENV": JSON.stringify(EXEC_ENV)
             }),
             new webpack.optimize.DedupePlugin(),
             new webpack.optimize.CommonsChunkPlugin(
@@ -237,7 +235,7 @@ gulp.task("coverage", proGulp.task("coverage"));
 
 
 /*
-*   Tasks to setup the development EXEC_ENV
+*   Tasks to setup the development environment
 */
 
 proGulp.task("setupDevServer", () => {
