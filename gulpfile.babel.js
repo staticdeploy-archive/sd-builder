@@ -18,7 +18,7 @@ const gp = gulpLoadPlugins();
 /*
 *   Constants
 */
-const {NODE_ENV = "development", ENVIRONMENT = NODE_ENV} = process.env;
+const {NODE_ENV = "development", EXEC_ENV = "browser"} = process.env;
 const MINIFY_FILES = (NODE_ENV === "production");
 const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
@@ -54,7 +54,7 @@ function getCommitSha () {
 
 proGulp.task("buildMainHtml", () => {
     return gulp.src(`${appDir}/main.html`)
-        .pipe(gp.preprocess({context: {ENVIRONMENT}}))
+        .pipe(gp.preprocess({context: {EXEC_ENV}}))
         .pipe(gp.rename("index.html"))
         .pipe(gulp.dest(`${buildDir}/`));
 });
@@ -92,7 +92,7 @@ proGulp.task("buildAllScripts", (() => {
             new webpack.DefinePlugin({
                 "process.env": {
                     NODE_ENV: JSON.stringify(NODE_ENV),
-                    ENVIRONMENT: JSON.stringify(ENVIRONMENT)
+                    EXEC_ENV: JSON.stringify(EXEC_ENV)
                 }
             }),
             new webpack.optimize.DedupePlugin(),
@@ -237,7 +237,7 @@ gulp.task("coverage", proGulp.task("coverage"));
 
 
 /*
-*   Tasks to setup the development environment
+*   Tasks to setup the development EXEC_ENV
 */
 
 proGulp.task("setupDevServer", () => {

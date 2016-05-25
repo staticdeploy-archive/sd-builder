@@ -82,3 +82,24 @@ gathered from:
 * the `.env` file when `NODE_ENV=development`
 * environment variables prefixed by `__APP_CONFIG__` file when
   `NODE_ENV=production`
+
+You should add `app-config.js` script in your `main.html` file.
+
+```html
+<script src="app-config.js"></script>
+```
+
+It's possible to distinguish between two different execution environments in preprocess by setting the `EXEC_ENV` variable. The default value is `browser`:
+```html
+<!-- @if EXEC_ENV=='cordova' -->
+<script src="/app-config.js"></script>
+<script src="cordova.js"></script>
+<script src="/_assets/js/vendor.js"></script>
+<script src="/_assets/js/app.js"></script>
+<!-- @endif -->
+<!-- @if EXEC_ENV=='browser' -->
+<script src="app-config.js"></script>
+<script src="_assets/js/vendor.js"></script>
+<script src="_assets/js/app.js"></script>
+<!-- @endif -->
+```
