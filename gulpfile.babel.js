@@ -289,7 +289,10 @@ gulp.task("dev", proGulp.sequence([
     "setupWatchers"
 ]));
 
-
+gulp.task("deploy", proGulp.sequence([
+    "build",
+    "config"
+]));
 
 /*
 *   Default task
@@ -306,5 +309,6 @@ gulp.task("default", () => {
     gp.util.log("  " + gp.util.colors.green("lint") + "     lint application source code");
     gp.util.log("  " + gp.util.colors.green("test") + "     run tests");
     gp.util.log("  " + gp.util.colors.green("coverage") + " run tests and calculate coverage");
+    gp.util.log("  " + gp.util.colors.green("deploy") + "   build the project and write configuration to app-config.js");
     gp.util.log("");
 });
