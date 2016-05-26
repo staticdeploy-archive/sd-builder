@@ -14,6 +14,7 @@ Opinionated builder for react web projects.
 * `sd-builder lint` lints files with eslint
 * `sd-builder test` runs tests
 * `sd-builder coverage` runs tests and calculates coverage
+* `sd-builder deploy` build the project and write configuration to `app-config.js`
 
 ## Main conventions
 
