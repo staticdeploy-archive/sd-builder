@@ -1,6 +1,6 @@
 import {promisify} from "bluebird";
 import browserSync from "browser-sync";
-import {execSync} from "child_process";
+import {execSync, spawn} from "child_process";
 import history from "connect-history-api-fallback";
 import dotenv from "dotenv";
 import fs from "fs";
@@ -24,6 +24,7 @@ const testDir = `${process.cwd()}/test`;
 const appDir = `${process.cwd()}/app`;
 const buildDir = `${process.cwd()}/build`;
 const depsPath = `${process.cwd()}/deps.json`;
+const packagePath = `${process.cwd()}/package.json`;
 const npmDir = `${process.cwd()}/node_modules/.bin`;
 
 
@@ -196,6 +197,29 @@ gulp.task("lint", () => {
 
 
 /*
+ *   Retire
+ */
+
+gulp.task("retire", function () {
+    // Spawn Retire.js as a child process
+    // You can optionally add option parameters to the second argument (array)
+    var child = spawn("retire", [], {cwd: process.cwd()});
+
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", function (data) {
+        gp.util.log(data);
+    });
+
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", function (data) {
+        gp.util.log(gp.util.colors.red(data));
+        gp.util.beep();
+    });
+});
+
+gulp.task("retire", proGulp.task("retire"));
+
+/*
 *   Testers
 */
 
@@ -279,12 +303,17 @@ proGulp.task("setupWatchers", () => {
         depsPath,
         proGulp.parallel(["buildAllScripts", "buildVendorFonts", "buildVendorStyles", "test"])
     );
+    gulp.watch(
+        [`${appDir}/**/*.js`, packagePath],
+        proGulp.task("retire")
+    );
 });
 
 gulp.task("dev", proGulp.sequence([
     "build",
     "config",
     "test",
+    "retire",
     "setupDevServer",
     "setupWatchers"
 ]));
@@ -306,5 +335,6 @@ gulp.task("default", () => {
     gp.util.log("  " + gp.util.colors.green("lint") + "     lint application source code");
     gp.util.log("  " + gp.util.colors.green("test") + "     run tests");
     gp.util.log("  " + gp.util.colors.green("coverage") + " run tests and calculate coverage");
+    gp.util.log("  " + gp.util.colors.green("retire") + "   check dependencies vulnerabilities");
     gp.util.log("");
 });
