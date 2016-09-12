@@ -11,9 +11,6 @@ Opinionated builder for react web projects.
 * `sd-builder dev` sets up dev environment with auto-recompiling
 * `sd-builder build` builds the project
 * `sd-builder config` writes the app configuration to `app-config.js`
-* `sd-builder lint` lints files with eslint
-* `sd-builder test` runs tests
-* `sd-builder coverage` runs tests and calculates coverage
 
 ## Main conventions
 
@@ -56,22 +53,11 @@ Opinionated builder for react web projects.
 * Files listed in `deps.json`'s `fonts` array are copied (concat) into
   `build/_assets/fonts`.
 
-### Tests
-
-* Test files go into the `test` directory. They can either have a `.js` or a
-  `.jsx ` extension.
-
 ### Version
 
 * the build generates a `VERSION` file with the following format:
   * if building in a git repository, `[package.json version] - [git commit sha]`
   * otherwise, `[package.json version]`
-
-### General
-
-* When `NODE_ENV=production` JS and CSS files are minified.
-
-* Linting can be configured with a `.eslintrc` file.
 
 ## Configuration
 
@@ -89,18 +75,40 @@ You should add `app-config.js` script in your `main.html` file.
 <script src="app-config.js"></script>
 ```
 
-At build time, it's possible to distinguish between different execution environments by setting the EXEC_ENV build environment variable. EXEC_ENV defaults to browser.
+## Build customization via build-time environment variables
+
+At build time, the following environment variables can be used to customize the
+build:
+
+* `NODE_ENV`: defaults to `development`
+* `EXEC_ENV`: defaults to `browser`
+
+The variables are:
+
+* passed to [gulp-preprocess](https://github.com/jas/gulp-preprocess) when
+  building `main.html`
+* passed to webpack `DefinePlugin` when building js files
+
+Example `main.html` build customization:
 
 ```html
 <!-- @if EXEC_ENV=='cordova' -->
-<script src="/app-config.js"></script>
+<!--
+    This ends up in the compiled index.html only when, in the build
+    environment, process.env.EXEC_ENV === "cordova"
+-->
 <script src="cordova.js"></script>
-<script src="/_assets/js/vendor.js"></script>
-<script src="/_assets/js/app.js"></script>
-<!-- @endif -->
-<!-- @if EXEC_ENV=='browser' -->
-<script src="app-config.js"></script>
-<script src="_assets/js/vendor.js"></script>
-<script src="_assets/js/app.js"></script>
 <!-- @endif -->
 ```
+
+Example js build customization:
+
+```js
+console.log(process.env.EXEC_ENV);
+/*
+*   When in the build environment process.env.EXEC_ENV === "cordova", the above
+*   line of code will be compiled into the line `console.log("cordova");`
+*/
+```
+
+When `NODE_ENV=production` JS and CSS files are minified.
