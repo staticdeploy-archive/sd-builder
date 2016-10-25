@@ -1,5 +1,6 @@
 const {promisify} = require("bluebird");
 const {execSync} = require("child_process");
+const fileExists = require("file-exists");
 const fs = require("fs");
 const gulp = require("gulp");
 const gulpLoadPlugins = require("gulp-load-plugins");
@@ -115,6 +116,11 @@ proGulp.task("buildAppVersion", () => {
     fs.writeFileSync(`${BUILD_DIR}/VERSION`, version);
 });
 
+proGulp.task("buildAppChangelog", () => {
+    return gulp.src(`${process.cwd()}/CHANGELOG.md`)
+        .pipe(gulp.dest(`${BUILD_DIR}/`));
+});
+
 proGulp.task("buildVendorStyles", () => {
     const deps = JSON.parse(fs.readFileSync(DEPS_PATH));
     return gulp.src(deps.css)
@@ -138,6 +144,7 @@ const build = proGulp.parallel([
     "buildAllScripts",
     "buildAppAssets",
     "buildAppVersion",
+    "buildAppChangelog",
     "buildVendorStyles",
     "buildVendorFonts"
 ]);
@@ -146,6 +153,7 @@ Object.assign(build, {
     allScripts: proGulp.task("buildAllScripts"),
     appAssets: proGulp.task("buildAppAssets"),
     appVersion: proGulp.task("buildAppVersion"),
+    appChangelog: proGulp.task("buildAppChangelog"),
     vendorStyles: proGulp.task("buildVendorStyles"),
     vendorFonts: proGulp.task("buildVendorFonts")
 });
