@@ -59,6 +59,10 @@ Opinionated builder for react web projects.
   * if building in a git repository, `[package.json version] - [git commit sha]`
   * otherwise, `[package.json version]`
 
+### Changelog
+
+* when a `CHANGELOG.md` file is present, it's copied to `build/CHANGELOG.md`
+
 ## Configuration
 
 Running `sd-builder config` a `build/app-config.js` file is generated, exporting
