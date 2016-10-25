@@ -12,7 +12,7 @@ function setupDevServer () {
             baseDir: BUILD_DIR,
             middleware: [history({
                 rewrites: [
-                    {from: /\/VERSION$/, to: "/VERSION"},
+                    {from: /\/VERSION\.txt$/, to: "/VERSION.txt"},
                     {from: /\/CHANGELOG\.md$/, to: "/CHANGELOG.md"}
                 ]
             })]

@@ -1,6 +1,5 @@
 const {promisify} = require("bluebird");
 const {execSync} = require("child_process");
-const fileExists = require("file-exists");
 const fs = require("fs");
 const gulp = require("gulp");
 const gulpLoadPlugins = require("gulp-load-plugins");
@@ -113,7 +112,7 @@ proGulp.task("buildAppVersion", () => {
     const commitSha = getCommitSha();
     const commitShaString = commitSha ? ` - ${commitSha}` : "";
     const version = `${pkg.version}${commitShaString}`;
-    fs.writeFileSync(`${BUILD_DIR}/VERSION`, version);
+    fs.writeFileSync(`${BUILD_DIR}/VERSION.txt`, version);
 });
 
 proGulp.task("buildAppChangelog", () => {
