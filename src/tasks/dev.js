@@ -10,7 +10,12 @@ function setupDevServer () {
     browserSync({
         server: {
             baseDir: BUILD_DIR,
-            middleware: [history()]
+            middleware: [history({
+                rewrites: [
+                    {from: /\/VERSION\.txt$/, to: "/VERSION.txt"},
+                    {from: /\/CHANGELOG\.md$/, to: "/CHANGELOG.md"}
+                ]
+            })]
         },
         files: `${BUILD_DIR}/**/*`,
         port: 8080,

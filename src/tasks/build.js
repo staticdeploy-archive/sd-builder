@@ -112,7 +112,12 @@ proGulp.task("buildAppVersion", () => {
     const commitSha = getCommitSha();
     const commitShaString = commitSha ? ` - ${commitSha}` : "";
     const version = `${pkg.version}${commitShaString}`;
-    fs.writeFileSync(`${BUILD_DIR}/VERSION`, version);
+    fs.writeFileSync(`${BUILD_DIR}/VERSION.txt`, version);
+});
+
+proGulp.task("buildAppChangelog", () => {
+    return gulp.src(`${process.cwd()}/CHANGELOG.md`)
+        .pipe(gulp.dest(`${BUILD_DIR}/`));
 });
 
 proGulp.task("buildVendorStyles", () => {
@@ -138,6 +143,7 @@ const build = proGulp.parallel([
     "buildAllScripts",
     "buildAppAssets",
     "buildAppVersion",
+    "buildAppChangelog",
     "buildVendorStyles",
     "buildVendorFonts"
 ]);
@@ -146,6 +152,7 @@ Object.assign(build, {
     allScripts: proGulp.task("buildAllScripts"),
     appAssets: proGulp.task("buildAppAssets"),
     appVersion: proGulp.task("buildAppVersion"),
+    appChangelog: proGulp.task("buildAppChangelog"),
     vendorStyles: proGulp.task("buildVendorStyles"),
     vendorFonts: proGulp.task("buildVendorFonts")
 });

@@ -55,9 +55,14 @@ Opinionated builder for react web projects.
 
 ### Version
 
-* the build generates a `VERSION` file with the following format:
+* the build generates a `VERSION.txt` file (written to `build/VERSION.txt`)
+  with the following format:
   * if building in a git repository, `[package.json version] - [git commit sha]`
   * otherwise, `[package.json version]`
+
+### Changelog
+
+* when a `CHANGELOG.md` file is present, it's copied to `build/CHANGELOG.md`
 
 ## Configuration
 
