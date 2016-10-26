@@ -1,72 +1,74 @@
 const {promisify} = require("bluebird");
-const {execSync} = require("child_process");
-const fs = require("fs");
-const gulp = require("gulp");
-const gulpLoadPlugins = require("gulp-load-plugins");
-const mkdirp = require("mkdirp");
-const proGulp = require("pro-gulp");
+const CleanCSS = require("clean-css");
+const fileExists = require("file-exists");
+const fs = require("fs-extra");
+const {preprocessFileSync} = require("preprocess");
+const shelljs = require("shelljs");
 const webpack = require("webpack");
-
-const gp = gulpLoadPlugins();
-
-/*
-*   Constants
-*/
-
-const {
-    NODE_ENV,
-    EXEC_ENV,
-    MINIFY_FILES,
-    APP_DIR,
-    BUILD_DIR,
-    DEPS_PATH
-} = require("../config");
 
 /*
 *   Utils
 */
 
-function getCommitSha () {
+function getCommitSha (options) {
     try {
-        return execSync("git rev-parse HEAD").toString();
+        return shelljs.exec("git rev-parse HEAD", {cwd: options.rootDir}).stdout;
     } catch (ignore) {
         console.warn("Failed to get commit sha via git command");
     }
     try {
-        return execSync("cat .git/ORIG_HEAD").toString();
+        return shelljs.cat(`${options.rootDir}/.git/ORIG_HEAD`);
     } catch (ignore) {
         console.warn("Failed to get commit sha by reading from ORIG_HEAD");
     }
     return null;
 }
 
+function getDeps (options) {
+    const depsPath = `${options.rootDir}/deps.json`;
+    const deps = (
+        fileExists(depsPath) ? fs.readJsonSync(depsPath) : {}
+    );
+    return {
+        js: deps.js || [],
+        css: deps.css || [],
+        fonts: deps.fonts || []
+    };
+}
+
+function minifyCss (css) {
+    return new CleanCSS().minify(css).styles;
+}
+
 /*
 *   Builders
 */
 
-proGulp.task("buildMainHtml", () => {
-    return gulp.src(`${APP_DIR}/main.html`)
-        .pipe(gp.preprocess({context: {EXEC_ENV, NODE_ENV}}))
-        .pipe(gp.rename("index.html"))
-        .pipe(gulp.dest(`${BUILD_DIR}/`));
-});
+const mainHtml = options => {
+    shelljs.mkdir("-p", options.buildDir);
+    preprocessFileSync(
+        `${options.appDir}/main.html`,
+        `${options.buildDir}/index.html`,
+        {
+            EXEC_ENV: options.EXEC_ENV,
+            NODE_ENV: options.NODE_ENV
+        }
+    );
+};
 
-proGulp.task("buildAllScripts", (() => {
-    var compiler = null;
-    return trashCompiler => {
+const allScripts = (() => {
+    let compiler = null;
+    return (options, trashCompiler) => {
         if (trashCompiler) {
             compiler = null;
         }
-        const deps = JSON.parse(fs.readFileSync(DEPS_PATH));
-        mkdirp.sync(`${BUILD_DIR}/_assets/js`);
+        shelljs.mkdir("-p", `${options.buildDir}/_assets/js`);
         compiler = compiler || webpack({
-            entry: {
-                app: `${APP_DIR}/main.jsx`,
-                vendor: deps.js
-            },
+            entry: `${options.appDir}/main.jsx`,
             devtool: "source-map",
             output: {
-                filename: `${BUILD_DIR}/_assets/js/app.js`
+                path: `${options.buildDir}/_assets/js`,
+                filename: "app.js"
             },
             module: {
                 loaders: [
@@ -82,78 +84,78 @@ proGulp.task("buildAllScripts", (() => {
                 ]
             },
             resolve: {
-                root: APP_DIR,
+                root: options.appDir,
                 extensions: ["", ".js", ".json", ".jsx"]
             },
             plugins: [
                 new webpack.DefinePlugin({
-                    "process.env.NODE_ENV": JSON.stringify(NODE_ENV),
-                    "process.env.EXEC_ENV": JSON.stringify(EXEC_ENV)
+                    "process.env.NODE_ENV": JSON.stringify(options.NODE_ENV),
+                    "process.env.EXEC_ENV": JSON.stringify(options.EXEC_ENV)
                 }),
                 new webpack.optimize.DedupePlugin(),
-                new webpack.optimize.CommonsChunkPlugin(
-                    "vendor",
-                    `${BUILD_DIR}/_assets/js/vendor.js`
-                ),
-                (MINIFY_FILES ? new webpack.optimize.UglifyJsPlugin() : null)
+                (options.minifyFiles ? new webpack.optimize.UglifyJsPlugin() : null)
             ].filter(i => i)
         });
-        return promisify(compiler.run, {context: compiler})();
+        return promisify(
+            compiler.run.bind(compiler)
+        )();
     };
-})());
+})();
 
-proGulp.task("buildAppAssets", () => {
-    return gulp.src(`${APP_DIR}/assets/**/*`)
-        .pipe(gulp.dest(`${BUILD_DIR}/_assets/`));
-});
+const appAssets = options => {
+    shelljs.cp("-r", `${options.appDir}/assets/`, `${options.buildDir}/_assets/`);
+};
 
-proGulp.task("buildAppVersion", () => {
-    const pkg = JSON.parse(fs.readFileSync(`${process.cwd()}/package.json`, "utf8"));
+const appVersion = options => {
+    const pkg = fs.readJsonSync(`${options.rootDir}/package.json`);
     const commitSha = getCommitSha();
     const commitShaString = commitSha ? ` - ${commitSha}` : "";
     const version = `${pkg.version}${commitShaString}`;
-    fs.writeFileSync(`${BUILD_DIR}/VERSION.txt`, version);
-});
+    fs.writeFileSync(`${options.buildDir}/VERSION.txt`, version);
+};
 
-proGulp.task("buildAppChangelog", () => {
-    return gulp.src(`${process.cwd()}/CHANGELOG.md`)
-        .pipe(gulp.dest(`${BUILD_DIR}/`));
-});
+const appChangelog = options => {
+    shelljs.cp(`${options.appDir}/CHANGELOG.md`, `${options.buildDir}/CHANGELOG.md`);
+};
 
-proGulp.task("buildVendorStyles", () => {
-    const deps = JSON.parse(fs.readFileSync(DEPS_PATH));
-    return gulp.src(deps.css)
-        .pipe(gp.concat("vendor.css"))
-        .pipe(gp.if(MINIFY_FILES, gp.cssnano()))
-        .pipe(gulp.dest(`${BUILD_DIR}/_assets/css/`));
-});
+const vendorStyles = options => {
+    const vendorCss = shelljs.cat(getDeps(options).css);
+    fs.writeFileSync(
+        `${options.buildDir}/_assets/css/vendor.css`,
+        options.minifyFiles ? minifyCss(vendorCss) : vendorCss
+    );
+};
 
-proGulp.task("buildVendorFonts", () => {
-    const deps = JSON.parse(fs.readFileSync(DEPS_PATH));
-    return gulp.src(deps.fonts)
-        .pipe(gulp.dest(`${BUILD_DIR}/_assets/fonts/`));
-});
+const vendorFonts = options => {
+    shelljs.cp(
+        getDeps(options).fonts,
+        `${options.buildDir}/_assets/fonts/`
+    );
+};
+
+const build = options => {
+    return Promise.all([
+        mainHtml(options),
+        allScripts(options),
+        appAssets(options),
+        appVersion(options),
+        appChangelog(options),
+        vendorStyles(options),
+        vendorFonts(options)
+    ]);
+};
 
 /*
 *   Exports
 */
 
-const build = proGulp.parallel([
-    "buildMainHtml",
-    "buildAllScripts",
-    "buildAppAssets",
-    "buildAppVersion",
-    "buildAppChangelog",
-    "buildVendorStyles",
-    "buildVendorFonts"
-]);
 Object.assign(build, {
-    mainHtml: proGulp.task("buildMainHtml"),
-    allScripts: proGulp.task("buildAllScripts"),
-    appAssets: proGulp.task("buildAppAssets"),
-    appVersion: proGulp.task("buildAppVersion"),
-    appChangelog: proGulp.task("buildAppChangelog"),
-    vendorStyles: proGulp.task("buildVendorStyles"),
-    vendorFonts: proGulp.task("buildVendorFonts")
+    mainHtml,
+    allScripts,
+    appAssets,
+    appVersion,
+    appChangelog,
+    vendorStyles,
+    vendorFonts
 });
 module.exports = build;

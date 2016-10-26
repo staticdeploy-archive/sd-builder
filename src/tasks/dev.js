@@ -1,15 +1,16 @@
 const browserSync = require("browser-sync");
 const history = require("connect-history-api-fallback");
-const gulp = require("gulp");
+const _ = require("lodash");
+const nodeWatch = require("node-watch");
+const path = require("path");
 
-const {APP_DIR, BUILD_DIR, DEPS_PATH} = require("../config");
 const build = require("./build");
 const config = require("./config");
 
-function setupDevServer () {
+function setupDevServer (options) {
     browserSync({
         server: {
-            baseDir: BUILD_DIR,
+            baseDir: options.buildDir,
             middleware: [history({
                 rewrites: [
                     {from: /\/VERSION\.txt$/, to: "/VERSION.txt"},
@@ -17,7 +18,7 @@ function setupDevServer () {
                 ]
             })]
         },
-        files: `${BUILD_DIR}/**/*`,
+        files: `${options.buildDir}/**/*`,
         port: 8080,
         ghostMode: false,
         injectChanges: false,
@@ -27,21 +28,38 @@ function setupDevServer () {
     });
 }
 
-function setupWatchers () {
-    gulp.watch(`${APP_DIR}/main.html`, build.mainHtml);
-    gulp.watch(`${APP_DIR}/.env`, config);
-    gulp.watch([`${APP_DIR}/**/*.jsx`, `${APP_DIR}/**/*.js`], build.allScripts);
-    gulp.watch(`${APP_DIR}/assets/**/*`, build.appAssets);
-    gulp.watch(DEPS_PATH, () => Promise.all([
-        build.allScripts(true),
-        build.vendorFonts(),
-        build.vendorStyles()
-    ]));
+function watch (watchPath, callback) {
+    return nodeWatch(watchPath, _.debounce(callback, 100));
 }
 
-module.exports = function dev () {
-    build();
-    config();
-    setupDevServer();
-    setupWatchers();
-};
+function setupWatchers (options) {
+    watch(`${options.appDir}/main.html`, () => {
+        build.mainHtml(options);
+    });
+    watch(`${options.rootDir}/.env`, () => {
+        config(options);
+    });
+    watch(`${options.rootDir}/deps.json`, () => {
+        build.allScripts(options, true);
+        build.vendorFonts(options);
+        build.vendorStyles(options);
+    });
+    watch(options.appDir, filename => {
+        const extension = path.extname(filename);
+        if (extension === ".js" || extension === ".jsx") {
+            build.allScripts(options);
+        }
+    });
+    watch(`${options.appDir}/assets`, () => {
+        build.appAssets(options);
+    });
+}
+
+function dev (options) {
+    build(options);
+    config(options);
+    setupDevServer(options);
+    setupWatchers(options);
+}
+
+module.exports = dev;
