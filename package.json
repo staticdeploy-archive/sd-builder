@@ -1,6 +1,6 @@
 {
   "name": "sd-builder",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "description": "Opinionated builder for react web projects",
   "main": "src/bin/sd-builder.js",
   "bin": {
