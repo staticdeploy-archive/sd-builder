@@ -1,6 +1,6 @@
 const {promisify} = require("bluebird");
 const {execSync} = require("child_process");
-const fs = require("fs");
+const fs = require("fs-extra");
 const gulp = require("gulp");
 const gulpLoadPlugins = require("gulp-load-plugins");
 const mkdirp = require("mkdirp");

@@ -1,5 +1,5 @@
 const dotenv = require("dotenv");
-const fs = require("fs");
+const fs = require("fs-extra");
 const _ = require("lodash");
 const proGulp = require("pro-gulp");
 
@@ -25,5 +25,6 @@ module.exports = proGulp.task("config", () => {
             .mapKeys((value, key) => key.replace(prefixRegexp, ""));
     }
     const code = `window.APP_CONFIG = ${JSON.stringify(config, null, 4)};`;
+    fs.ensureDirSync(BUILD_DIR);
     fs.writeFileSync(`${BUILD_DIR}/app-config.js`, code);
 });
