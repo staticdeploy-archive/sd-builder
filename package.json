@@ -39,7 +39,6 @@
     "gulp-rename": "^1.2.2",
     "json-loader": "^0.5.4",
     "lodash": "^4.16.4",
-    "mkdirp": "^0.5.1",
     "pro-gulp": "^0.3.0",
     "webpack": "^1.13.2",
     "yargs": "^6.3.0"

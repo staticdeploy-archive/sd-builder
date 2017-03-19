@@ -3,7 +3,6 @@ const {execSync} = require("child_process");
 const fs = require("fs-extra");
 const gulp = require("gulp");
 const gulpLoadPlugins = require("gulp-load-plugins");
-const mkdirp = require("mkdirp");
 const proGulp = require("pro-gulp");
 const webpack = require("webpack");
 
@@ -58,7 +57,7 @@ proGulp.task("buildAllScripts", (() => {
             compiler = null;
         }
         const deps = JSON.parse(fs.readFileSync(DEPS_PATH));
-        mkdirp.sync(`${BUILD_DIR}/_assets/js`);
+        fs.mkdirpSync(`${BUILD_DIR}/_assets/js`);
         compiler = compiler || webpack({
             entry: {
                 app: `${APP_DIR}/main.jsx`,
