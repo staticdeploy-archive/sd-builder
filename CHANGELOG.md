@@ -1,3 +1,9 @@
+## 4.0.1 (2017-04-23)
+
+Fix:
+
+* fix config task if build folder not exists
+
 ## 4.0.0 (2016-10-15)
 
 Features:
