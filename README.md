@@ -6,6 +6,11 @@
 
 Opinionated builder for react web projects.
 
+# DEPRECATION WARNING
+
+This project is no longer developed, having been superseded by
+[create-react-app](https://github.com/facebook/create-react-app).
+
 ## Usage
 
 * `sd-builder dev` sets up dev environment with auto-recompiling
